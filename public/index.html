@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Task Management App</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e293b;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 11px 18px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .danger {
+            background: #dc2626;
+        }
+
+        .danger:hover {
+            background: #b91c1c;
+        }
+
+        .success {
+            background: #16a34a;
+        }
+
+        .success:hover {
+            background: #15803d;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .task {
+            border: 1px solid #ddd;
+            padding: 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .task h3 {
+            margin-top: 0;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: #777;
+        }
+
+        #message {
+            text-align: center;
+            font-weight: bold;
+            margin: 15px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .top-bar button {
+            width: auto;
+        }
+        /* Mobile Responsive Design */
+@media (max-width: 600px) {
+    .container {
+        width: 95%;
+        padding: 10px;
+        margin: 20px auto;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+
+    input,
+    textarea,
+    button {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+
+    .task {
+        padding: 15px;
+    }
+
+    .task button {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+    </style>
+    
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Task Management Application</h1>
+
+    <!-- AUTH SECTION -->
+    <div id="authSection">
+
+        <div class="card">
+            <h2>Register</h2>
+
+            <input id="registerName"
+                   type="text"
+                   placeholder="Name">
+
+            <input id="registerEmail"
+                   type="email"
+                   placeholder="Email">
+
+            <input id="registerPassword"
+                   type="password"
+                   placeholder="Password">
+
+            <button onclick="register()">
+                Create Account
+            </button>
+        </div>
+
+        <div class="card">
+            <h2>Login</h2>
+
+            <input id="loginEmail"
+                   type="email"
+                   placeholder="Email">
+
+            <input id="loginPassword"
+                   type="password"
+                   placeholder="Password">
+
+            <button onclick="login()">
+                Login
+            </button>
+        </div>
+
+    </div>
+
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="hidden">
+
+        <div class="card">
+
+            <div class="top-bar">
+                <h2>My Tasks</h2>
+
+                <button class="danger"
+                        onclick="logout()">
+                    Logout
+                </button>
+            </div>
+
+            <h3>Add New Task</h3>
+
+            <input id="taskTitle"
+                   type="text"
+                   placeholder="Task title">
+
+            <textarea id="taskDescription"
+                      placeholder="Task description"></textarea>
+
+            <input id="taskDueDate"
+                   type="date">
+
+            <button onclick="createTask()">
+                Add Task
+            </button>
+
+        </div>
+
+
+        <div class="card">
+
+            <h2>My Task List</h2>
+
+            <div id="taskList">
+                Loading tasks...
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <p id="message"></p>
+
+</div>
+
+
+<script>
+
+let currentUser = null;
+
+
+/* REGISTER */
+
+async function register() {
+
+    const name =
+        document.getElementById("registerName").value;
+
+    const email =
+        document.getElementById("registerEmail").value;
+
+    const password =
+        document.getElementById("registerPassword").value;
+
+
+    const response = await fetch("/api/register", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            name,
+            email,
+            password
+        })
+
+    });
+
+
+    const data = await response.json();
+
+    showMessage(data.message);
+}
+
+
+/* LOGIN */
+
+async function login() {
+
+    const email =
+        document.getElementById("loginEmail").value;
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+
+    const response = await fetch("/api/login", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            email,
+            password
+        })
+
+    });
+
+
+    const data = await response.json();
+
+
+    if (data.token) {
+
+        localStorage.setItem("token", data.token);
+
+        localStorage.setItem(
+            "user",
+            JSON.stringify(data.user)
+        );
+
+        currentUser = data.user;
+
+        showDashboard();
+
+        loadTasks();
+
+    }
+
+
+    showMessage(data.message);
+}
+
+
+/* SHOW DASHBOARD */
+
+function showDashboard() {
+
+    document
+        .getElementById("authSection")
+        .classList.add("hidden");
+
+    document
+        .getElementById("dashboard")
+        .classList.remove("hidden");
+}
+
+
+/* CREATE TASK */
+
+async function createTask() {
+
+    const title =
+        document.getElementById("taskTitle").value;
+
+    const description =
+        document.getElementById("taskDescription").value;
+
+    const dueDate =
+        document.getElementById("taskDueDate").value;
+
+
+    if (!title) {
+
+        showMessage("Please enter a task title");
+
+        return;
+    }
+
+
+    await fetch("/api/tasks", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+            title,
+            description,
+            dueDate,
+            userId: currentUser.id
+
+        })
+
+    });
+
+
+    document.getElementById("taskTitle").value = "";
+
+    document.getElementById("taskDescription").value = "";
+
+    document.getElementById("taskDueDate").value = "";
+
+
+    loadTasks();
+
+    showMessage("Task created successfully");
+}
+
+
+/* LOAD TASKS */
+
+async function loadTasks() {
+
+    if (!currentUser) return;
+
+
+    const response = await fetch(
+        `/api/tasks/${currentUser.id}`
+    );
+
+
+    const tasks = await response.json();
+
+
+    const taskList =
+        document.getElementById("taskList");
+
+
+    taskList.innerHTML = "";
+
+
+    if (tasks.length === 0) {
+
+        taskList.innerHTML =
+            "<p>No tasks yet. Add your first task!</p>";
+
+        return;
+    }
+
+
+    tasks.forEach(task => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "task";
+
+
+        div.innerHTML = `
+
+            <h3 class="${task.completed ? "completed" : ""}">
+                ${task.title}
+            </h3>
+
+            <p>${task.description}</p>
+
+            <p>
+                <strong>Due:</strong>
+                ${task.dueDate || "No due date"}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                ${task.completed ? "Completed" : "Pending"}
+            </p>
+
+            <button
+                class="success"
+                onclick="completeTask(${task.id})">
+                ${task.completed ? "Mark Pending" : "Complete"}
+            </button>
+
+            <button
+                onclick="editTask(${task.id})">
+                Edit
+            </button>
+
+            <button
+                class="danger"
+                onclick="deleteTask(${task.id})">
+                Delete
+            </button>
+
+        `;
+
+
+        taskList.appendChild(div);
+
+    });
+
+}
+
+
+/* COMPLETE TASK */
+
+async function completeTask(id) {
+
+    const response =
+        await fetch(`/api/tasks/${id}`);
+
+    const tasks =
+        await fetch(`/api/tasks/${currentUser.id}`);
+
+    const allTasks =
+        await tasks.json();
+
+    const task =
+        allTasks.find(t => t.id === id);
+
+
+    await fetch(`/api/tasks/${id}`, {
+
+        method: "PUT",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+            completed: !task.completed
+
+        })
+
+    });
+
+
+    loadTasks();
+}
+
+
+/* EDIT TASK */
+
+async function editTask(id) {
+    const title = prompt("Enter new task title:");
+    if (!title) return;
+
+    const description = prompt("Enter new task description:");
+    if (description === null) return;
+
+    const dueDate = prompt("Enter new due date (YYYY-MM-DD):");
+    if (dueDate === null) return;
+
+    await fetch(`/api/tasks/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            title: title,
+            description: description,
+            dueDate: dueDate
+        })
+    });
+
+    loadTasks();
+}
+
+
+/* DELETE TASK */
+
+async function deleteTask(id) {
+
+    const confirmDelete =
+        confirm("Delete this task?");
+
+
+    if (!confirmDelete) return;
+
+
+    await fetch(`/api/tasks/${id}`, {
+
+        method: "DELETE"
+
+    });
+
+
+    loadTasks();
+
+    showMessage("Task deleted");
+}
+
+
+/* LOGOUT */
+
+function logout() {
+
+    localStorage.removeItem("token");
+
+    localStorage.removeItem("user");
+
+    currentUser = null;
+
+
+    document
+        .getElementById("dashboard")
+        .classList.add("hidden");
+
+    document
+        .getElementById("authSection")
+        .classList.remove("hidden");
+
+}
+
+
+/* MESSAGE */
+
+function showMessage(message) {
+
+    document
+        .getElementById("message")
+        .textContent = message;
+
+}
+
+
+/* CHECK EXISTING LOGIN */
+
+const savedUser =
+    localStorage.getItem("user");
+
+
+if (savedUser) {
+
+    currentUser =
+        JSON.parse(savedUser);
+
+    showDashboard();
+
+    loadTasks();
+
+}
+
+</script>
+
+</body>
+</html>
