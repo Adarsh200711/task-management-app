@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 
 const app = express();
-const SECRET_KEY = "task-management-secret";
+const SECRET_KEY = process.env.SECRET_KEY || "task-management-secret";
 
 app.use(cors());
 app.use(express.json());
